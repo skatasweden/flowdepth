@@ -6,7 +6,7 @@ use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 use thiserror::Error;
 
-const PRODUCTION_BASE_URL: &str = "https://api.lyra.finance";
+const PRODUCTION_BASE_URL: &str = "https://api.derive.xyz/v3";
 const PAGE_SIZE: u16 = 1_000;
 const HTTP_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
@@ -154,7 +154,7 @@ impl DeriveOptionsClient {
             let params = TradeHistoryParams {
                 instrument_type: "option",
                 currency: underlying.as_str(),
-                tx_status: "settled",
+                batch_status: "Settled",
                 from_timestamp: from_timestamp.as_u64(),
                 to_timestamp: to_timestamp.as_u64(),
                 page,
@@ -166,7 +166,7 @@ impl DeriveOptionsClient {
                 let Some(instrument) = by_name.get(item.instrument_name.as_str()) else {
                     continue;
                 };
-                if item.tx_status != "settled" || item.liquidity_role != "maker" {
+                if item.batch_status != "Settled" || item.liquidity_role != "maker" {
                     continue;
                 }
                 let Some(trade) = item.into_model(instrument) else {
@@ -306,7 +306,7 @@ impl InstrumentDto {
 struct TradeHistoryParams<'a> {
     instrument_type: &'static str,
     currency: &'a str,
-    tx_status: &'static str,
+    batch_status: &'static str,
     from_timestamp: u64,
     to_timestamp: u64,
     page: u32,
@@ -329,7 +329,7 @@ struct TradeDto {
     trade_amount: String,
     mark_price: String,
     index_price: String,
-    tx_status: String,
+    batch_status: String,
 }
 
 impl TradeDto {
@@ -426,7 +426,7 @@ mod tests {
                 assert!(request_body.contains("\"instrument_type\":\"option\""));
                 assert!(request_body.contains("\"currency\":\"BTC\""));
                 if index >= 2 {
-                    assert!(request_body.contains("\"tx_status\":\"settled\""));
+                    assert!(request_body.contains("\"batch_status\":\"Settled\""));
                     assert!(request_body.contains("\"from_timestamp\":1800000000000"));
                     assert!(request_body.contains("\"to_timestamp\":1800000010000"));
                 } else {
